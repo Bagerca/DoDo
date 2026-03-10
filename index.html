@@ -3,38 +3,388 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Додо Комбо: 10 пицц</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <title>Додо - 10 Пицц (33 пиццы, точные цены)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --primary: #FF6900;
+            --primary-hover: #E86100;
+            --bg-body: #F3F3F7;
+            --bg-surface: #FFFFFF;
+            --bg-secondary: #E2E2E9;
+            --text-main: #000000;
+            --text-gray: #5C6370;
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --radius-pill: 999px;
+            --font: 'Nunito', system-ui, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font); }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding: 40px 20px;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; }
+
+        .page-header { margin-bottom: 30px; }
+        .page-header h1 { font-size: 36px; font-weight: 800; margin-bottom: 10px; }
+        .page-header p { color: var(--text-gray); font-size: 16px; max-width: 600px; line-height: 1.5; }
+
+        .layout { display: flex; gap: 30px; align-items: flex-start; }
+        .slots-column { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+
+        .slot-card {
+            background: var(--bg-surface); border-radius: var(--radius-lg);
+            padding: 20px; display: flex; gap: 24px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.04); transition: 0.3s;
+        }
+        .slot-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+
+        .slot-img-wrap { width: 140px; height: 140px; flex-shrink: 0; position: relative; }
+        .slot-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        .slot-badge {
+            position: absolute; top: -5px; left: -10px; background: #FFF0E6; color: var(--primary);
+            font-weight: 800; font-size: 12px; padding: 4px 8px; border-radius: var(--radius-pill); z-index: 1;
+        }
+
+        .slot-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .slot-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;}
+        .slot-title { font-size: 20px; font-weight: 700; line-height: 1.2;}
+        .slot-desc { font-size: 13px; color: var(--text-gray); line-height: 1.4; margin-bottom: 16px; }
+
+        .btn-replace {
+            background: #FFF0E6; color: var(--primary); border: none; padding: 8px 16px;
+            border-radius: var(--radius-pill); font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-replace:hover { background: #FFE4D2; }
+
+        .slot-controls { display: flex; gap: 12px; flex-wrap: wrap; }
+        
+        .toggle-group {
+            display: flex; background: var(--bg-secondary); border-radius: var(--radius-pill);
+            padding: 2px; position: relative; flex: 1; min-width: 200px;
+        }
+        
+        .toggle-slider {
+            position: absolute; top: 2px; left: 2px; height: calc(100% - 4px); width: calc(50% - 2px);
+            background: var(--bg-surface); border-radius: var(--radius-pill); box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1;
+        }
+
+        .toggle-group label {
+            flex: 1; text-align: center; position: relative; z-index: 2; padding: 8px 10px;
+            font-size: 13px; font-weight: 600; color: var(--text-gray); cursor: pointer;
+            transition: color 0.2s; user-select: none; white-space: nowrap;
+        }
+        .toggle-group label.active { color: var(--text-main); }
+
+        .receipt-sidebar { width: 340px; flex-shrink: 0; position: sticky; top: 40px; }
+        .receipt-card { background: var(--bg-surface); border-radius: var(--radius-lg); padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.06); }
+        .receipt-title { font-size: 22px; font-weight: 800; margin-bottom: 20px; }
+        .receipt-line { display: flex; justify-content: space-between; font-size: 15px; color: var(--text-main); margin-bottom: 12px; }
+        .receipt-line.sub { font-size: 13px; color: var(--text-gray); margin-bottom: 8px; }
+        .receipt-line.sub span:last-child { color: var(--text-main); font-weight: 600; }
+        .receipt-group-title { font-size: 14px; font-weight: 700; margin: 16px 0 8px 0; color: var(--text-main); }
+        .receipt-line.total { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--bg-secondary); font-size: 24px; font-weight: 800; }
+        
+        .receipt-note {
+            font-size: 12px; color: var(--text-gray); line-height: 1.3; margin-top: 12px;
+        }
+
+        .btn-checkout {
+            width: 100%; background: var(--primary); color: #fff; border: none; padding: 16px;
+            border-radius: var(--radius-pill); font-size: 16px; font-weight: 700; margin-top: 20px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-checkout:hover { background: var(--primary-hover); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);
+            display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-content {
+            background: var(--bg-body); width: 950px; max-height: 85vh; border-radius: var(--radius-lg);
+            display: flex; flex-direction: column; transform: scale(0.95); transition: 0.3s; overflow: hidden;
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .modal-header {
+            padding: 20px 24px; background: var(--bg-surface); display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 1px solid var(--bg-secondary);
+        }
+        .modal-header h2 { font-size: 22px; font-weight: 800; }
+        .btn-close {
+            background: var(--bg-secondary); border: none; width: 36px; height: 36px; border-radius: 50%;
+            font-size: 20px; cursor: pointer; color: var(--text-gray); transition: 0.2s;
+        }
+        .btn-close:hover { background: #d1d2d6; color: #000; }
+
+        .modal-grid { padding: 24px; overflow-y: auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .pizza-opt-card {
+            background: var(--bg-surface); border-radius: var(--radius-md); padding: 16px; text-align: center;
+            cursor: pointer; border: 2px solid transparent; transition: 0.2s; display: flex; flex-direction: column; position: relative;
+        }
+        .pizza-opt-card:hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+        .pizza-opt-card.selected { border-color: var(--primary); }
+        .pizza-opt-card img { width: 130px; height: 130px; margin: 0 auto 12px; }
+        .pizza-opt-card .p-name { font-size: 14px; font-weight: 700; margin-bottom: 8px; flex: 1;}
+        .pizza-opt-card .p-extra {
+            background: #FFF0E6; color: var(--primary); border-radius: var(--radius-pill);
+            padding: 4px 8px; font-size: 13px; font-weight: 700; display: inline-block; margin: 0 auto;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cfd0d5; border-radius: 10px; }
+    </style>
 </head>
 <body>
 
-<div class="combo-modal-wrapper">
-    <div class="combo-modal">
-        <header class="modal-header">
-            <h1>10 пицц</h1>
-            <p>Великолепная десятка. 10 средних пицц на любой вкус. Для компании из 20-30 человек. Цена комбо зависит от выбранных пицц и может быть увеличена.</p>
-        </header>
+<div class="container">
+    <header class="page-header">
+        <h1>10 пицц</h1>
+        <p>Великолепная десятка. 10 средних пицц на любой вкус. Для компании из 20-30 человек. Цена комбо зависит от выбранных рецептов и размера каждой пиццы.</p>
+    </header>
 
-        <div class="combo-builder">
-            <div class="slots-container" id="combo-slots">
-                <!-- Слоты для пицц будут сгенерированы здесь с помощью JavaScript -->
-            </div>
-        </div>
+    <div class="layout">
+        <!-- Список слотов -->
+        <div class="slots-column" id="slots-container"></div>
 
-        <footer class="modal-footer">
-            <div class="price-section">
-                <span class="total-price-label">Итого:</span>
-                <span class="total-price" id="total-price">4 989 ₽</span>
+        <!-- Чек -->
+        <aside class="receipt-sidebar">
+            <div class="receipt-card">
+                <div class="receipt-title">Ваш заказ</div>
+                <div id="receipt-content"></div>
+                <div class="receipt-line total">
+                    <span>Итого</span>
+                    <span id="receipt-total">0 ₽</span>
+                </div>
+                <div class="receipt-note">* Актуальную доплату за размер 35 см уточняйте на сайте Додо Пиццы</div>
+                <button class="btn-checkout">В корзину</button>
             </div>
-            <button class="add-to-cart-button">Собрать</button>
-        </footer>
+        </aside>
     </div>
 </div>
 
-<script src="script.js"></script>
+<!-- Модальное окно замены -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleModalClick(event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Заменить пиццу</h2>
+            <button class="btn-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-grid" id="modal-grid"></div>
+    </div>
+</div>
 
+<script>
+    // Базовая стоимость за 10 пицц 30 см (минимальной категории)
+    const BASE_COMBO_PRICE = 4989;
+
+    // Полная база из 33 пицц с точными доплатами за замену (extra)
+    const pizzas =[
+        { id: 1, name: "Терияки", img: "https://media.dodostatic.net/image/r:292x292/019afab403ed7001a6263185d978f3f5.jpg", extra: 0, desc: "Цыпленок, красный лук, сладкий перец, соус терияки, сыр моцарелла и фирменный соус альфредо" },
+        { id: 2, name: "Маргарита", img: "https://media.dodostatic.net/image/r:292x292/0198bf3d788b78d491891a6da5e94bf1.jpg", extra: 0, desc: "Увеличенная порция моцареллы, томаты, итальянские травы, фирменный томатный соус" },
+        { id: 3, name: "Пепперони фреш", img: "https://media.dodostatic.net/image/r:292x292/0198bf57bc517218ab93c762f4b0193e.jpg", extra: 0, desc: "Пикантная пепперони, увеличенная порция моцареллы, томаты, фирменный томатный соус" },
+        { id: 4, name: "Пепперони", img: "https://media.dodostatic.net/image/r:292x292/0198bf39dda97082912be8d1f3f2b233.jpg", extra: 0, desc: "Пикантная пепперони, увеличенная порция моцареллы, фирменный томатный соус" },
+        { id: 5, name: "Пикантные колбаски", img: "https://media.dodostatic.net/image/r:292x292/0198bf25089a74d08e08629b41ed39ee.jpg", extra: 0, desc: "Классические колбаски, лук красный, моцарелла, фирменный томатный соус" },
+        { id: 6, name: "Двойной цыпленок", img: "https://media.dodostatic.net/image/r:292x292/019af8f736ee71108d0c53fe3bc4520e.jpg", extra: 0, desc: "Двойная порция цыпленка, моцарелла, фирменный соус альфредо" },
+        { id: 7, name: "Чесночный цыпленок", img: "https://media.dodostatic.net/image/r:292x292/019afacd7dc1725980e8c7166f7ccc04.jpg", extra: 0, desc: "Цыпленок, чеснок, томаты, моцарелла, фирменный соус альфредо" },
+        { id: 8, name: "Ветчина и сыр", img: "https://media.dodostatic.net/image/r:292x292/019af8decaba71d690d4ed9a8962a498.jpg", extra: 0, desc: "Ветчина, моцарелла, фирменный соус альфредо" },
+        { id: 9, name: "Сырная", img: "https://media.dodostatic.net/image/r:292x292/019afa507ae371e8a6b99101e25132cc.jpg", extra: 0, desc: "Моцарелла, сыры чеддер и пармезан, фирменный соус альфредо" },
+        { id: 10, name: "Ветчина и грибы", img: "https://media.dodostatic.net/image/r:292x292/0198c659b357718f9c77ad0dc392dadf.jpg", extra: 0, desc: "Ветчина, шампиньоны, увеличенная порция моцареллы, фирменный томатный соус" },
+        { id: 11, name: "Четыре сезона", img: "https://media.dodostatic.net/image/r:292x292/0198bf47733e787a98ed55d13e9a2251.jpg", extra: 0, desc: "Увеличенная порция моцареллы, ветчина, пикантная пепперони, кубики брынзы, томаты, шампиньоны, итальянские травы, фирменный томатный соус" },
+        { id: 12, name: "Бургер-пицца", img: "https://media.dodostatic.net/image/r:292x292/0199b77856ec79a986a2d582c2678fff.jpg", extra: 0, desc: "Ветчина, маринованные огурчики, томаты, красный лук, чеснок, соус бургер, моцарелла, фирменный томатный соус" },
+        { id: 13, name: "Говядина с хреном", img: "https://media.dodostatic.net/image/r:292x292/019bea4e1f1b794299fe61d1e0941f9f.jpg", extra: 0, desc: "Пряная говядина, соус сливочный хрен, сладкий перец, красный лук, моцарелла, фирменный томатный соус" },
+        { id: 14, name: "Гавайская", img: "https://media.dodostatic.net/image/r:292x292/019af8ec51e075d5adcee62506bca8df.jpg", extra: 40, desc: "Двойная порция цыпленка, ананасы, моцарелла, фирменный соус альфредо" },
+        { id: 15, name: "Четыре сыра", img: "https://media.dodostatic.net/image/r:292x292/019afad6a04c7375972fcad00a40a77c.jpg", extra: 50, desc: "Сыр блю чиз, сыры чеддер и пармезан, моцарелла, фирменный соус альфредо" },
+        { id: 16, name: "Овощи и грибы", img: "https://media.dodostatic.net/image/r:292x292/0198bf29e76179b88bdbf2ec5527bba3.jpg", extra: 70, desc: "Шампиньоны, томаты, сладкий перец, красный лук, кубики брынзы, моцарелла, фирменный томатный соус, итальянские травы" },
+        { id: 17, name: "Жюльен", img: "https://media.dodostatic.net/image/r:292x292/019af90cee6b718886e11633d45f34ae.jpg", extra: 100, desc: "Цыпленок, шампиньоны, ароматный грибной соус, лук, сухой чеснок, моцарелла, смесь сыров чеддер и пармезан, фирменный соус альфредо" },
+        { id: 18, name: "Мясной микс", img: "https://media.dodostatic.net/image/r:292x292/019bfc26d13e710094be830c3c55ccc2.jpg", extra: 110, desc: "Добавили сочную свиную шейку к пряной говядине, пикантной пепперони, бекону и моцарелле с фирменным томатным соусом" },
+        { id: 19, name: "Аррива!", img: "https://media.dodostatic.net/image/r:292x292/0198bf2e5d2973a4bf5ec61161496f91.jpg", extra: 110, desc: "Цыпленок, острые колбаски чоризо, соус бургер, сладкий перец, красный лук, томаты, моцарелла, соус ранч, чеснок" },
+        { id: 20, name: "Двойная пепперони", img: "https://media.dodostatic.net/image/r:292x292/0198bf315122735a8b45cf8539df53f8.jpg", extra: 110, desc: "Двойная порция пикантной пепперони, увеличенная порция моцареллы, фирменный томатный соус" },
+        { id: 21, name: "Сырный цыпленок", img: "https://media.dodostatic.net/image/r:292x292/019afa5d91b3731f88f7226c11fbf6ae.jpg", extra: 120, desc: "Двойная порция цыпленка, моцарелла, сыры чеддер и пармезан, сырный соус, томаты, фирменный соус альфредо, чеснок" },
+        { id: 22, name: "Песто", img: "https://media.dodostatic.net/image/r:292x292/019afa1ae8ee7242af6827b5c5cfc135.jpg", extra: 130, desc: "Двойная порция цыпленка, соус песто, кубики брынзы, томаты, моцарелла, фирменный соус альфредо" },
+        { id: 23, name: "Цыпленок ранч", img: "https://media.dodostatic.net/image/r:292x292/019afac4642c73b9aacf4f1e57090844.jpg", extra: 130, desc: "Двойная порция цыпленка, ветчина, соус ранч, моцарелла, томаты, чеснок, фирменный соус альфредо" },
+        { id: 24, name: "Масала", img: "https://media.dodostatic.net/image/r:292x292/019c0ecbf69c7070b1fb3010c6b53770.jpg", extra: 130, desc: "Пряные новости: у нас новинка с индийскими мотивами! В ней сочный цыпленок, лук, помидоры, сладкий перец, соусы альфредо и масала" },
+        { id: 25, name: "Пицца с хреном", img: "https://media.dodostatic.net/image/r:292x292/019afa231b757067b865b896dbab2388.jpg", extra: 180, desc: "Возможно, первая в истории пицца с пикантным сливочным хреном, свиной шейкой, красным луком и маринованными огурчиками. Дерзайте пробовать!" },
+        { id: 26, name: "Карбонара", img: "https://media.dodostatic.net/image/r:292x292/019af91d7024718db8c72911daa3a40c.jpg", extra: 180, desc: "Бекон, сыры чеддер и пармезан, моцарелла, томаты, красный лук, чеснок, фирменный соус альфредо, итальянские травы" },
+        { id: 27, name: "Додо микс", img: "https://media.dodostatic.net/image/r:292x292/019af902eb3a72ebb8f303b74be0e639.jpg", extra: 180, desc: "Бекон, цыпленок, ветчина, сыр блю чиз, сыры чеддер и пармезан, соус песто, кубики брынзы, томаты, красный лук, моцарелла, фирменный соус альфредо, чеснок, итальянские травы" },
+        { id: 28, name: "Цыпленок барбекю", img: "https://media.dodostatic.net/image/r:292x292/0198bf2cc87a79baa946c53b634615f4.jpg", extra: 210, desc: "Двойная порция цыпленка, бекон, соус барбекю, красный лук, моцарелла, фирменный томатный соус" },
+        { id: 29, name: "Диабло", img: "https://media.dodostatic.net/image/r:292x292/0198bf439a007604880d0231be87cd3e.jpg", extra: 210, desc: "Острые колбаски чоризо, острый перец халапеньо, соус барбекю, пряная говядина, томаты, сладкий перец, красный лук, моцарелла, фирменный томатный соус" },
+        { id: 30, name: "Креветки со сладким чили", img: "https://media.dodostatic.net/image/r:292x292/019af924249c7908869f18a2063cf4c7.jpg", extra: 250, desc: "Креветки, ананасы, соус сладкий чили, сладкий перец, моцарелла, фирменный соус альфредо" },
+        { id: 31, name: "Мясная", img: "https://media.dodostatic.net/image/r:292x292/019a897c5ea574b889475bd98412de7b.jpg", extra: 280, desc: "Перезагрузили рецепт: теперь пять видов мяса и новый фирменный соус, который делает вкус еще ярче. Цыпленок, говядина, колбаски, пепперони и бекон стали еще мяснее!" },
+        { id: 32, name: "Креветка и песто", img: "https://media.dodostatic.net/image/r:292x292/0198bf4d218b75d4a3e667fc2f6d7643.jpg", extra: 330, desc: "Креветки, томаты, шампиньоны, соус песто, моцарелла, итальянские травы, фирменный томатный соус" },
+        { id: 33, name: "Додо", img: "https://media.dodostatic.net/image/r:292x292/019ac604bad37209b1ec496bbdd98560.jpg", extra: 370, desc: "Секрет обновленной пиццы — в новом соусе. Он усиливает вкус и делает сочетание бекона, говядины и пепперони еще мяснее!" }
+    ];
+
+    // Дефолтные слоты (раскидываем первые 5 пицц из массива для разнообразия)
+    let slots = Array.from({ length: 10 }, (_, i) => ({
+        pizzaId: i % 5 + 1, 
+        size: 30, 
+        dough: 'traditional' 
+    }));
+
+    let currentEditingSlot = null;
+
+    function format(num) {
+        return num.toLocaleString('ru-RU') + ' ₽';
+    }
+
+    function getPizza(id) {
+        return pizzas.find(p => p.id === id);
+    }
+
+    function updateSlot(index, key, value) {
+        slots[index][key] = value;
+        renderAll();
+    }
+
+    function renderSlots() {
+        const container = document.getElementById('slots-container');
+        container.innerHTML = '';
+
+        slots.forEach((slot, index) => {
+            const pizza = getPizza(slot.pizzaId);
+            
+            const sizePos = slot.size === 30 ? '0' : '100%';
+            const doughPos = slot.dough === 'traditional' ? '0' : '100%';
+
+            const badgeHtml = pizza.extra > 0 ? `<div class="slot-badge">+${pizza.extra} ₽</div>` : '';
+
+            const el = document.createElement('div');
+            el.className = 'slot-card';
+            el.innerHTML = `
+                <div class="slot-img-wrap">
+                    ${badgeHtml}
+                    <img src="${pizza.img}" alt="${pizza.name}">
+                </div>
+                <div class="slot-info">
+                    <div class="slot-header">
+                        <div class="slot-title">${pizza.name}</div>
+                        <button class="btn-replace" onclick="openModal(${index})">Заменить</button>
+                    </div>
+                    <div class="slot-desc">${pizza.desc}</div>
+                    
+                    <div class="slot-controls">
+                        <!-- Размер -->
+                        <div class="toggle-group" style="flex: 1.2;">
+                            <div class="toggle-slider" style="transform: translateX(${sizePos});"></div>
+                            <label class="${slot.size === 30 ? 'active' : ''}" onclick="updateSlot(${index}, 'size', 30)">30 см</label>
+                            <label class="${slot.size === 35 ? 'active' : ''}" onclick="updateSlot(${index}, 'size', 35)">35 см*</label>
+                        </div>
+
+                        <!-- Тесто -->
+                        <div class="toggle-group" style="flex: 0.8;">
+                            <div class="toggle-slider" style="transform: translateX(${doughPos});"></div>
+                            <label class="${slot.dough === 'traditional' ? 'active' : ''}" onclick="updateSlot(${index}, 'dough', 'traditional')">Традиционное</label>
+                            <label class="${slot.dough === 'thin' ? 'active' : ''}" onclick="updateSlot(${index}, 'dough', 'thin')">Тонкое</label>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(el);
+        });
+    }
+
+    function renderReceipt() {
+        const content = document.getElementById('receipt-content');
+        const totalEl = document.getElementById('receipt-total');
+        
+        let total = BASE_COMBO_PRICE;
+        let html = `
+            <div class="receipt-line">
+                <span>Базовая стоимость комбо</span>
+                <span>${format(BASE_COMBO_PRICE)}</span>
+            </div>
+        `;
+
+        let recipeExtras = {};
+
+        slots.forEach(slot => {
+            const pizza = getPizza(slot.pizzaId);
+            
+            if (pizza.extra > 0) {
+                if (!recipeExtras[pizza.name]) recipeExtras[pizza.name] = { count: 0, cost: pizza.extra };
+                recipeExtras[pizza.name].count++;
+                total += pizza.extra;
+            }
+        });
+
+        const extraNames = Object.keys(recipeExtras);
+        if (extraNames.length > 0) {
+            html += `<div class="receipt-group-title">Замена пицц в комбо:</div>`;
+            extraNames.forEach(name => {
+                const item = recipeExtras[name];
+                const countText = item.count > 1 ? ` x${item.count}` : '';
+                html += `
+                    <div class="receipt-line sub">
+                        <span>${name}${countText}</span>
+                        <span>+${format(item.count * item.cost)}</span>
+                    </div>
+                `;
+            });
+        }
+
+        content.innerHTML = html;
+        totalEl.textContent = format(total);
+    }
+
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalGrid = document.getElementById('modal-grid');
+
+    window.openModal = function(index) {
+        currentEditingSlot = index;
+        modalGrid.innerHTML = '';
+        
+        pizzas.forEach(pizza => {
+            const extraHtml = pizza.extra > 0 ? `<div class="p-extra">+${pizza.extra} ₽</div>` : '';
+            const isSelected = slots[currentEditingSlot].pizzaId === pizza.id;
+
+            const card = document.createElement('div');
+            card.className = `pizza-opt-card ${isSelected ? 'selected' : ''}`;
+            
+            card.innerHTML = `
+                <img src="${pizza.img}" alt="${pizza.name}">
+                <div class="p-name">${pizza.name}</div>
+                ${extraHtml}
+            `;
+            card.onclick = () => selectPizza(pizza.id);
+            modalGrid.appendChild(card);
+        });
+
+        modalOverlay.classList.add('active');
+    }
+
+    window.closeModal = function() {
+        modalOverlay.classList.remove('active');
+        currentEditingSlot = null;
+    }
+
+    window.selectPizza = function(pizzaId) {
+        if (currentEditingSlot !== null) {
+            slots[currentEditingSlot].pizzaId = pizzaId;
+            slots[currentEditingSlot].size = 30; // Сбрасываем размер на 30см
+            renderAll();
+        }
+        closeModal();
+    }
+
+    window.handleModalClick = function(e) {
+        if (e.target === modalOverlay) closeModal();
+    }
+
+    function renderAll() {
+        renderSlots();
+        renderReceipt();
+    }
+
+    // Старт
+    renderAll();
+</script>
 </body>
 </html>
