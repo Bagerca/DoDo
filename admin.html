@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👑 Итоги Голосования</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap');
+        body { font-family: 'Nunito', sans-serif; background: #1a1a1a; color: #fff; padding: 30px 20px; margin: 0; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { color: #FF6900; font-weight: 800; font-size: 32px; margin-bottom: 5px; }
+        .subtitle { color: #888; margin-bottom: 30px; font-size: 16px; }
+
+        .dashboard { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+        @media (max-width: 768px) { .dashboard { grid-template-columns: 1fr; } }
+
+        .card { background: #2a2a2a; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .card h2 { margin-top: 0; margin-bottom: 20px; font-size: 20px; border-bottom: 1px solid #444; padding-bottom: 10px;}
+
+        /* Рейтинг пицц */
+        .pizza-row { display: flex; align-items: center; background: #333; margin-bottom: 10px; padding: 12px; border-radius: 12px; }
+        .pizza-row.top { background: linear-gradient(90deg, #FF690020, #333); border: 1px solid #FF690050; }
+        .p-rank { font-size: 18px; font-weight: 800; color: #888; width: 30px; }
+        .pizza-row.top .p-rank { color: #FF6900; }
+        .p-name { flex: 1; font-weight: 600; font-size: 16px; }
+        .p-votes { font-size: 18px; font-weight: 800; color: #2ed573; background: #2ed57320; padding: 4px 12px; border-radius: 20px;}
+
+        /* Гости */
+        .voted-list, .missing-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .tag { padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+        .tag.voted { background: #2ed57320; color: #2ed573; border: 1px solid #2ed573; }
+        .tag.missing { background: #ff475720; color: #ff4757; border: 1px solid #ff4757; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>👑 Пицце-Битва 2025</h1>
+    <div class="subtitle">Результаты голосования в реальном времени</div>
+
+    <div class="dashboard">
+        <!-- Блок рейтинга -->
+        <div class="card">
+            <h2>🏆 Рейтинг Пицц (Топ-10)</h2>
+            <div id="leaderboard">Загрузка данных из базы...</div>
+        </div>
+
+        <!-- Блок людей -->
+        <div class="card">
+            <h2>👥 Статистика гостей</h2>
+            <div style="margin-bottom: 10px; color:#888; font-size: 14px;">Проголосовали: <span id="voted-count" style="color:#fff; font-weight:bold;">0</span></div>
+            <div class="voted-list" id="voted-list"></div>
+            
+            <div style="margin-bottom: 10px; color:#888; font-size: 14px; margin-top:20px;">Ещё ждут:</div>
+            <div class="missing-list" id="missing-list"></div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    // ИМПОРТЫ FIREBASE (ВЕРСИЯ 12.10.0)
+    import { db } from './firebase-init.js';
+    import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+    const allGuests =[
+        "Айрапетянц София", "Бебия Баграт", "Беляев Дмитрий", "Божеский Артём", "Бунковская Вероника",
+        "Валеева Ульяна", "Воробель Елизавета", "Гатикоева Карина", "Герасимова Полина", "Горлов Максим",
+        "Демидович Вероника", "Дрыбалов Андрей", "Елсукова Кира", "Ермуханов Жанахмед", "Калинина Лиана",
+        "Кочмар Евгения", "Леонтьева Елизавета", "Надьярная Елизавета", "Очакова Ксения", "Пяжиева Алина",
+        "Радивилов Кирилл", "Рыбак Григорий", "Шарин Кирилл", "Шилова Екатерина", "Янцевич Полина", "Албаева Лариса Кадыровна"
+    ];
+
+    const pizzaNames = {
+        1:"Сырная", 2:"Пепперони фреш", 3:"Пикантные колбаски", 4:"Чесночный цыпленок", 5:"Ветчина и сыр", 
+        6:"Двойной цыпленок", 7:"Пепперони", 8:"Ветчина и грибы", 9:"Терияки", 10:"Гавайская", 
+        11:"Говядина с хреном", 12:"Маргарита", 13:"Бургер-пицца", 14:"Четыре сыра", 15:"Овощи и грибы", 
+        16:"Масала", 17:"Жюльен", 18:"Песто", 19:"Аррива!", 20:"Двойная пепперони", 21:"Карбонара", 
+        22:"Пицца с хреном", 23:"Сырный цыпленок", 24:"Цыпленок ранч", 25:"Мясная", 26:"Цыпленок барбекю", 
+        27:"Креветки со сладким чили", 28:"Четыре сезона", 29:"Креветка и песто", 30:"Додо", 
+        31:"Мясной микс", 32:"Додо микс"
+    };
+
+    onSnapshot(collection(db, "pizza_votes"), (snapshot) => {
+        let pizzaVotesCount = {};
+        let votedUsers =[];
+
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            votedUsers.push(data.userName);
+            
+            if (data.slots) {
+                data.slots.forEach(slot => {
+                    if (!pizzaVotesCount[slot.pizzaId]) pizzaVotesCount[slot.pizzaId] = 0;
+                    pizzaVotesCount[slot.pizzaId]++;
+                });
+            }
+        });
+
+        // 1. Обновляем списки людей
+        document.getElementById('voted-count').textContent = `${votedUsers.length} / ${allGuests.length}`;
+        document.getElementById('voted-list').innerHTML = votedUsers.map(u => `<span class="tag voted">${u}</span>`).join('');
+        
+        const missing = allGuests.filter(g => !votedUsers.includes(g));
+        document.getElementById('missing-list').innerHTML = missing.map(u => `<span class="tag missing">${u}</span>`).join('');
+
+        // 2. Формируем рейтинг пицц
+        let leaderboardArray = Object.keys(pizzaVotesCount).map(id => {
+            return { id: id, name: pizzaNames[id] || "Неизвестная пицца", votes: pizzaVotesCount[id] };
+        });
+        
+        leaderboardArray.sort((a, b) => b.votes - a.votes);
+
+        // Отрисовка
+        let html = '';
+        if (leaderboardArray.length === 0) {
+            html = '<div style="color:#888;">Пока никто не проголосовал 🤷‍♂️</div>';
+        } else {
+            leaderboardArray.forEach((item, index) => {
+                const isTop10 = index < 10;
+                html += `
+                    <div class="pizza-row ${isTop10 ? 'top' : ''}">
+                        <div class="p-rank">${index + 1}</div>
+                        <div class="p-name">${item.name} ${isTop10 ? '🔥' : ''}</div>
+                        <div class="p-votes">${item.votes}</div>
+                    </div>
+                `;
+            });
+        }
+        document.getElementById('leaderboard').innerHTML = html;
+    });
+</script>
+</body>
+</html>
