@@ -2,22 +2,39 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Конструктор комбо из 10 пицц</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Додо Комбо: 10 пицц</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<div class="combo-modal">
-    <h1>10 пицц</h1>
-    <div class="combo-container" id="combo-slots">
-        <!-- Сюда JS добавит 10 слотов -->
+<div class="combo-modal-wrapper">
+    <div class="combo-modal">
+        <header class="modal-header">
+            <h1>10 пицц</h1>
+            <p>Великолепная десятка. 10 средних пицц на любой вкус. Для компании из 20-30 человек. Цена комбо зависит от выбранных пицц и может быть увеличена.</p>
+        </header>
+
+        <div class="combo-builder">
+            <div class="slots-container" id="combo-slots">
+                <!-- Слоты для пицц будут сгенерированы здесь с помощью JavaScript -->
+            </div>
+        </div>
+
+        <footer class="modal-footer">
+            <div class="price-section">
+                <span class="total-price-label">Итого:</span>
+                <span class="total-price" id="total-price">4 989 ₽</span>
+            </div>
+            <button class="add-to-cart-button">Собрать</button>
+        </footer>
     </div>
-    <div class="total-price">
-        Итого: <span id="total-price">4 989</span> ₽
-    </div>
-    <button class="add-button">В корзину</button>
 </div>
 
 <script src="script.js"></script>
+
 </body>
 </html>
